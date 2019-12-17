@@ -38,8 +38,8 @@
       <id>${repoid}</id>
       <name>${reponame}</name>
       <url>${repourl}</url>
-    </repository>         
-  </distributionManagement>   
+    </repository>
+  </distributionManagement>
 
   <properties>
     <maven.version>3.5.4</maven.version>
@@ -100,6 +100,19 @@
   </dependencies>
 
   <build>
+    <!-- Add "delphi" classifier -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <configuration>
+            <classifier>delphi</classifier>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <outputDirectory>target/scala-${scala.binary.version}/classes</outputDirectory>
     <testOutputDirectory>target/scala-${scala.binary.version}/test-classes</testOutputDirectory>
     <resources>

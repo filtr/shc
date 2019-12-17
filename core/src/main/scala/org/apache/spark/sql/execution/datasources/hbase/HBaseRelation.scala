@@ -107,6 +107,13 @@ case class HBaseRelation(
         val conf = HBaseConfiguration.create
         hBaseConfiguration.foreach(_.foreach(e => conf.set(e._1, e._2)))
         hBaseConfigFile.foreach(e => conf.set(e._1, e._2))
+
+        // copy configs from sqlContext if key starts with `spark.shc`
+        sqlContext.getAllConfs
+          .filterKeys(_.startsWith(HBaseRelation.SHC_CONFIG_PREFIX))
+          .map(e => (e._1.substring(HBaseRelation.SHC_CONFIG_PREFIX.length + 1), e._2)) // drop `spark.shc` prefix
+          .foreach(e => conf.set(e._1, e._2))
+
         conf
       }
     }
@@ -360,4 +367,5 @@ object HBaseRelation {
   val HBASE_CONFIGURATION = "hbaseConfiguration"
   // HBase configuration file such as HBase-site.xml, core-site.xml
   val HBASE_CONFIGFILE = "hbaseConfigFile"
+  val SHC_CONFIG_PREFIX = "spark.shc"
 }
