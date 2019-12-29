@@ -18,20 +18,20 @@ package org.apache.spark.sql.execution.datasources.hbase
 
 import java.io.{ByteArrayInputStream, DataInputStream}
 import java.security.PrivilegedExceptionAction
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
 import java.util.Date
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 
 import scala.collection.mutable
 import scala.language.existentials
 import scala.util.control.NonFatal
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.security.token.{AuthenticationTokenIdentifier, TokenUtil}
 import org.apache.hadoop.io.DataOutputBuffer
 import org.apache.hadoop.security.{Credentials, UserGroupInformation}
 import org.apache.hadoop.security.token.{Token, TokenIdentifier}
-
-import org.apache.spark.util.{ThreadUtils, Utils}
+import org.apache.spark.util.Utils
 import org.apache.spark.SparkEnv
 import org.apache.spark.sql.execution.datasources.hbase.SHCCredentialsManager._
 
@@ -62,7 +62,7 @@ final class SHCCredentialsManager private() extends Logging {
   }
 
   val tokenUpdateExecutor = Executors.newSingleThreadScheduledExecutor(
-    ThreadUtils.namedThreadFactory("HBase Tokens Refresh Thread"))
+    namedThreadFactory("HBase Tokens Refresh Thread"))
 
   // If SHCCredentialsManager is enabled, start an executor to update tokens
   if (credentialsManagerEnabled) {
@@ -83,6 +83,10 @@ final class SHCCredentialsManager private() extends Logging {
     (p, k)
   } else {
     (null, null)
+  }
+
+  private def namedThreadFactory(prefix: String): ThreadFactory = {
+    new ThreadFactoryBuilder().setDaemon(true).setNameFormat(prefix + "-%d").build()
   }
 
   /**
