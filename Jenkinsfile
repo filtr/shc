@@ -2,6 +2,7 @@ pipeline {
   agent {
     docker {
       image 'maven:3-jdk-8-slim'
+      args '-e MAVEN_OPTS="-Dmaven.repo.local=${WORKSPACE}/.m2/repository"'
       label 'linux-agents'
       reuseNode true
     }
@@ -15,10 +16,10 @@ pipeline {
         // at the moment it's impossible to run tests on Jenkins, because of unnamed container user (-u 1000:1000)
         // java.io.IOException: failure to login
         // Cause: javax.security.auth.login.LoginException: java.lang.NullPointerException: invalid null input: name
-        sh 'mvn package -DskipTests'
+        sh 'mvn package'
       }
     }
-    stage('Deploy') {
+    stage('Publish') {
       when {
         // publish only for `master`
         branch 'master'

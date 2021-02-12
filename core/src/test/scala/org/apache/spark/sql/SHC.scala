@@ -20,19 +20,19 @@
 
 package org.apache.spark.sql
 
-import org.apache.spark.sql.execution.datasources.hbase.Logging
-
-import java.io.File
-
 import com.google.common.io.Files
 import org.apache.hadoop.hbase.client.Table
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{HBaseTestingUtility, TableName}
-import org.apache.spark.sql.execution.datasources.hbase.SparkHBaseConf
-import org.apache.spark.{SparkContext, SparkConf}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSuite}
+import org.apache.hadoop.security.UserGroupInformation
+import org.apache.spark.sql.execution.datasources.hbase.{Logging, SparkHBaseConf}
+import org.apache.spark.{SparkConf, SparkContext}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
-class SHC  extends FunSuite with BeforeAndAfterEach with BeforeAndAfterAll  with Logging {
+import java.io.File
+
+class SHC extends AnyFunSuite with BeforeAndAfterEach with BeforeAndAfterAll with Logging {
   implicit class StringToColumn(val sc: StringContext) {
     def $(args: Any*): ColumnName = {
       new ColumnName(sc.s(args: _*))
@@ -73,6 +73,8 @@ class SHC  extends FunSuite with BeforeAndAfterEach with BeforeAndAfterAll  with
   def catalog = defineCatalog(tableName)
 
   override def beforeAll() {
+    UserGroupInformation.setLoginUser(UserGroupInformation.createRemoteUser("scalatest"))
+
     val tempDir: File = Files.createTempDir
     tempDir.deleteOnExit
     htu.startMiniCluster

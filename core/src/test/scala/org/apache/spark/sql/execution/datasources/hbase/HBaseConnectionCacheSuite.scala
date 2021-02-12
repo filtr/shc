@@ -20,14 +20,14 @@
 
 package org.apache.spark.sql.execution.datasources.hbase
 
-import java.util.concurrent.ExecutorService
-
-import org.scalatest.FunSuite
-import scala.util.Random
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.{HConstants, TableName}
+import org.scalatest.funsuite.AnyFunSuite
+
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.atomic.AtomicBoolean
+import scala.util.Random
 
 class HBaseConnectionKeyMocker(val confId: Int) extends HBaseConnectionKey(null) {
 
@@ -48,36 +48,41 @@ class HBaseConnectionKeyMocker(val confId: Int) extends HBaseConnectionKey(null)
 }
 
 class ConnectionMocker extends Connection {
-  var isClosed: Boolean = false
+  private val closed: AtomicBoolean = new AtomicBoolean(false)
 
-  def getRegionLocator(tableName: TableName): RegionLocator = null
+  override def isClosed: Boolean = closed.get()
 
-  def getConfiguration: Configuration = null
+  override def getRegionLocator(tableName: TableName): RegionLocator = null
 
-  def getTable(tableName: TableName): Table = null
+  override def getConfiguration: Configuration = null
 
-  def getTable(tableName: TableName, pool: ExecutorService): Table = null
+  override def getTable(tableName: TableName): Table = null
 
-  def getBufferedMutator(params: BufferedMutatorParams): BufferedMutator = null
+  override def getTable(tableName: TableName, pool: ExecutorService): Table = null
 
-  def getBufferedMutator(tableName: TableName): BufferedMutator = null
+  override def getBufferedMutator(params: BufferedMutatorParams): BufferedMutator = null
 
-  def getAdmin: Admin = null
+  override def getBufferedMutator(tableName: TableName): BufferedMutator = null
 
-  def getTableBuilder(tableName: TableName, executorService: ExecutorService): TableBuilder = null
+  override def getAdmin: Admin = null
 
-  def close(): Unit = {
+  override def getTableBuilder(tableName: TableName, executorService: ExecutorService): TableBuilder = null
+
+  override def close(): Unit = {
     if (isClosed)
       throw new IllegalStateException()
-    isClosed = true
+
+    closed.set(true)
   }
 
-  def isAborted: Boolean = true
+  override def isAborted: Boolean = true
 
-  def abort(why: String, e: Throwable) = {}
+  override def abort(why: String, e: Throwable): Unit = {}
+
+  override def clearRegionLocationCache(): Unit = {}
 }
 
-class HBaseConnectionCacheSuite extends FunSuite with Logging {
+class HBaseConnectionCacheSuite extends AnyFunSuite with Logging {
   /*
    * These tests must be performed sequentially as they operate with an
    * unique running thread and resource.

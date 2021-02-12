@@ -20,18 +20,18 @@
 
 package org.apache.spark.sql
 
-import java.io.File
-
-import scala.collection.JavaConverters._
-
 import com.google.common.io.Files
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.{TableName, HBaseTestingUtility}
+import org.apache.hadoop.hbase.{HBaseTestingUtility, TableName}
 import org.apache.spark.sql.execution.datasources.hbase.Logging
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
-class HBaseTestSuite extends FunSuite with BeforeAndAfterEach with BeforeAndAfterAll  with Logging {
+import java.io.File
+import scala.collection.JavaConverters._
+
+class HBaseTestSuite extends AnyFunSuite with BeforeAndAfterEach with BeforeAndAfterAll with Logging {
   private[spark] var htu = HBaseTestingUtility.createLocalHTU()
   private[spark] var tableName: Array[Byte] = Bytes.toBytes("t1")
   private[spark] var columnFamily: Array[Byte] = Bytes.toBytes("cf0")
