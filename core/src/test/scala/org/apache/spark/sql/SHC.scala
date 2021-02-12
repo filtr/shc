@@ -73,6 +73,8 @@ class SHC  extends FunSuite with BeforeAndAfterEach with BeforeAndAfterAll  with
   def catalog = defineCatalog(tableName)
 
   override def beforeAll() {
+    UserGroupInformation.setLoginUser(UserGroupInformation.createRemoteUser("scalatest"))
+
     val tempDir: File = Files.createTempDir
     tempDir.deleteOnExit
     htu.startMiniCluster
