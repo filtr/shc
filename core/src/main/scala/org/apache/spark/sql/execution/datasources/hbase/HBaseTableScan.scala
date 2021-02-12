@@ -20,9 +20,6 @@
 
 package org.apache.spark.sql.execution.datasources.hbase
 
-import java.{lang, util}
-import java.util.ArrayList
-
 import org.apache.hadoop.hbase.CellUtil
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.filter.{Filter => HFilter}
@@ -36,6 +33,7 @@ import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types._
 import org.apache.spark.util.ShutdownHookManager
 
+import java.util.ArrayList
 import scala.collection.mutable
 import scala.util.matching.Regex
 
@@ -154,12 +152,13 @@ private[hbase] class HBaseTableScanRDD(
 
           val pq = relation.catalog.shcTableCoder.toBytes(f.col)
           val timeseries = scalaColumns.get(pq)
-          val v = if(keepVersions(f.dt)) {
+          val v = if (keepVersions(f.dt)) {
             timeseries.map(_.asScala.mapValues(dataType.fromBytes))
           } else {
             timeseries.map(ver => dataType.fromBytes(ver.firstEntry().getValue))
-          }.getOrElse(null)
-          f -> v
+          }
+
+          f -> v.orNull
 
         }
       }.toMap
@@ -461,7 +460,7 @@ private[hbase] class HBaseTableScanRDD(
       x.start.isDefined && x.end.isDefined && ScanRange.compare(x.start, x.end, ord) == 0
     }
     logDebug(s"${g.length} gets, ${s.length} scans")
-    context.addTaskCompletionListener(context => close())
+    context.addTaskCompletionListener[Unit](_ => close())
     val tableResource = TableResource(relation)
     val filter = TypedFilter.fromSerializedTypedFilter(partition.tf).filter
     val gIt: Iterator[Result] = {

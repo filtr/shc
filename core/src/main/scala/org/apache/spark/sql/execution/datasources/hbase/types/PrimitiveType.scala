@@ -18,13 +18,17 @@ package org.apache.spark.sql.execution.datasources.hbase.types
 
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.execution.datasources.hbase._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.apache.spark.sql.execution.datasources.hbase._
 
-class PrimitiveType(f:Option[Field] = None) extends SHCDataType {
+import java.nio.charset.StandardCharsets
+import scala.annotation.tailrec
 
-  private def fromBytes(src: HBaseType, dt: DataType): Any  = dt match {
+class PrimitiveType(f: Option[Field] = None) extends SHCDataType {
+
+  @tailrec
+  private def fromBytes(src: HBaseType, dt: DataType): Any = dt match {
     case BooleanType => toBoolean(src)
     case ByteType => src(0)
     case DoubleType => Bytes.toDouble(src)
@@ -32,7 +36,7 @@ class PrimitiveType(f:Option[Field] = None) extends SHCDataType {
     case IntegerType => Bytes.toInt(src)
     case LongType => Bytes.toLong(src)
     case ShortType => Bytes.toShort(src)
-    case StringType => toUTF8String(src, src.length)
+    case StringType => new String(src, 0, src.length, StandardCharsets.UTF_8)
     case BinaryType => src
     // this block MapType in future if connector want to support it
     case m: MapType => fromBytes(src, m.valueType)
@@ -96,17 +100,17 @@ class PrimitiveType(f:Option[Field] = None) extends SHCDataType {
       case IntegerType => Bytes.toInt(src, offset)
       case LongType => Bytes.toLong(src, offset)
       case ShortType => Bytes.toShort(src, offset)
-      case StringType => toUTF8String(src, length, offset)
+      case StringType => new String(src, offset, length, StandardCharsets.UTF_8)
       case BinaryType =>
         val newArray = new Array[Byte](length)
         System.arraycopy(src, offset, newArray, 0, length)
         newArray
       case _ => throw new
-        UnsupportedOperationException(s"PrimitiveType coder: unsupported data type ${field.dt}")
+          UnsupportedOperationException(s"PrimitiveType coder: unsupported data type ${field.dt}")
     }
   }
 
-  override def encodeCompositeRowKey(rkIdxedFields:Seq[(Int, Field)], row: Row): Seq[Array[Byte]] = {
+  override def encodeCompositeRowKey(rkIdxedFields: Seq[(Int, Field)], row: Row): Seq[Array[Byte]] = {
     rkIdxedFields.map { case (x, y) =>
       SHCDataTypeFactory.create(y).toBytes(row(x))
     }
@@ -116,7 +120,4 @@ class PrimitiveType(f:Option[Field] = None) extends SHCDataType {
     input(offset) != 0
   }
 
-  private def toUTF8String(input: HBaseType, length: Int, offset: Int = 0): UTF8String = {
-    UTF8String.fromBytes(input.slice(offset, offset + length))
-  }
 }

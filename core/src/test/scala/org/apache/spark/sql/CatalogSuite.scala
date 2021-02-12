@@ -20,11 +20,11 @@
 
 package org.apache.spark.sql
 
-import org.apache.spark.sql.execution.datasources.hbase.Logging
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSuite}
-import org.apache.spark.sql.execution.datasources.hbase.HBaseTableCatalog
+import org.apache.spark.sql.execution.datasources.hbase.{HBaseTableCatalog, Logging}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
-class CatalogSuite  extends FunSuite with BeforeAndAfterEach with BeforeAndAfterAll  with Logging{
+class CatalogSuite extends AnyFunSuite with BeforeAndAfterEach with BeforeAndAfterAll with Logging {
   def catalog = s"""{
             |"table":{"namespace":"default", "name":"table1", "tableCoder":"PrimitiveType"},
             |"rowkey":"key1:key2",
